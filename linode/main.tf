@@ -86,9 +86,8 @@ hostnamectl set-hostname $DOMAIN
 echo -e "127.0.0.1 localhost $DOMAIN" >> /etc/hosts
 
 apt-get -y update
-apt-get -y install apt-transport-https linux-image-amd64 wireguard
+apt-get -y install iptables wireguard
 apt-get -y upgrade -o Dpkg::Options::="--force-confold"
-dpkg-reconfigure wireguard-dkms
 
 echo -e "[Interface]\nAddress = 10.9.0.1/32\nMTU = 1420\nListenPort = 51820\nPrivateKey = $WIREGUARD_PRIVATE_KEY\nPostUp = iptables -t nat -A PREROUTING -p udp -i eth0 --dport 1194 -j DNAT --to-destination 10.9.0.2; iptables -I INPUT -p udp --dport 51820 -j ACCEPT;  iptables -A FORWARD -p udp -i eth0 -o wg0 --dport 1194 -d 10.9.0.2 -j ACCEPT; iptables -A FORWARD -p udp -i wg0 -o eth0 -m state --state RELATED,ESTABLISHED -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE; iptables -t nat -A POSTROUTING -o wg0 -j SNAT --to-source 10.9.0.1\nPostDown = iptables -t nat -D PREROUTING -p udp -i eth0 --dport 1194 -j DNAT --to-destination 10.9.0.2; iptables -D INPUT -p udp --dport 51820 -j ACCEPT; iptables -D FORWARD -p udp -i eth0 -o wg0 --dport 1194 -d 10.9.0.2 -j ACCEPT; iptables -D FORWARD -p udp -i wg0 -o eth0 -m state --state RELATED,ESTABLISHED -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE; iptables -t nat -D POSTROUTING -o wg0 -j SNAT --to-source 10.9.0.1\n\n[Peer]\nPublicKey = $WIREGUARD_PUBLIC_KEY\nAllowedIPs = 10.9.0.2/32" > /etc/wireguard/wg0.conf
 
